@@ -13,7 +13,7 @@ A set of scripts/stubs/proxies to make possible running an original "Order & Cha
 
 ## How to use?
 
-Assuming that gameserver is already running on `192.1.168.78:7011` and your proxy device has IP `192.168.1.78`
+Assuming that gameserver is already running on `192.1.168.87:7011` and your proxy device has IP `192.168.1.78`
 All devices are in the same network.
 
 TODO: remove hardcoded IPs from scripts
