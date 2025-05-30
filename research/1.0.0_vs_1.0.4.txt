@@ -1,0 +1,86 @@
+1.0.0 -> 0x0020d188
+1.0.4 -> 0x00205890
+
+---
+
+1.0.4
+
+status 002058a8
+
+b *0x002058a8
+command
+p $r3
+cont
+end
+cont
+
+---
+
+
+hook for the MY_log
+
+Simple
+
+b *0x007a4fdc
+command
+p (char *)$r0
+cont
+end
+cont
+
+---
+
+status change
+
+1.0.0
+
+status 0
+status 0
+status 1
+status 1
+status 1
+status 1
+status 1
+status 1
+status 1
+status 1
+status 1
+status 1
+status 1
+status 1
+status 1
+status 1
+status 1
+status 1
+status 1
+status 2
+status 3
+status 4
+status 6
+status 7
+
+1.0.4
+
+status 0
+status 0
+status 1
+status 1
+status 1
+status 1
+status 1
+status 1
+status 1
+status 1
+status 1
+status 1
+status 1
+status 9
+
+---
+
+WebConfig parsing
+
+1.0.0 -> 0x007915b0
+1.0.4 -> 0x0079fd9c
+
+

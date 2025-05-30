@@ -1,0 +1,573 @@
+"f|%d|i|%d|v|%s|" -> GetWebConfig or ServerConfig::SendGetWebApiURL
+"f|%d|i|%d|u|abc|p|%s|" -> GLXPlayerFileDownloadMgr::SendGetFileInfo
+"f|%d|i|%d|u|Gameloft|p|%s|fsize|%d|ranges|" -> GLXPlayerFileDownloadMgr::SendCheckFile
+"f|%d|i|%d|u|Gameloft|d|%s|udid|%s|s|%s|l|%s|" -> GLXPlayerUser::sendAppleUserInfo
+"f|%d|i|%d|u|%s|" -> GLXPlayerUser::sendRetrievalPassword or SendKeepAlive or GLXPlayerUser::sendGetGameTrophyList
+"f|%d|i|%d|u|%s|p|%d|" -> GLXPlayerUser::sendGetGameTrophyList
+"f|%d|i|%d|u|%s|d|%s|" -> GLXPlayerUser::sendUploadUserPhoto
+"f|%d|i|%d|u|%s|k|%s|d|%s|" -> GLXPlayerUser::sendSetUserStoreData
+"f|%d|i|%d|y|%d|nid|%d|l|%s|" -> GLXPlayerUser::sendGetPromoRss
+"f|%d|i|%d|u|%s|t|%s|" -> GLXPlayerUser::sendAwardTrophy
+"f|%d|i|%d|u|%s|k|%s" -> GLXPlayerUser::sendGetUserStoreData
+"f|%d|i|%d|u|%s|p|%s|" -> Login
+
+----
+
+on device, gllive.gameloft.com was stubbed in /etc/hosts
+
+----
+
+ver 1.0.0 binary
+
+0x007915cc -> WebConfig response parsing?
+
+0x007908b4 -> "XSocket::Run(): Have someting to receive."
+
+0x00797bf0 -> WebConfig parsing second part?
+
+----
+
+curl -v 'http://gllive.gameloft.com/ope/ServerConfig.php?b=MXxm&LgFYudn3adF2XxmUaJIX0gFb'
+
+return that:
+
+f|1|r|e|27
+
+----
+
+WebArchive captures shows only "f|-1|r|e|27"
+Does -1 indicated service down?
+
+----
+
+"Content-Length" header is NOT expected to at the end of headers, or parsing of WebConfig response will fail!
+
+Had to switch from Go Gin to Python Flask :face_palm:
+(in Gin the Content-Length header is always last!)
+
+----
+
+f|1|r|e|101 ??
+
+f - funciton
+1 - funciton number
+
+r - response ?
+
+e - error
+101 - error number
+
+Got "[GameResMgr] Function: 1 - Error: 101." sending "f|1|r|e|101" back for GET http://gllive.gameloft.com/ope/GenericXPlayer_v1.php?b=MXxmYmdFPXNm1qZnWWxD8fMyJXhC8bxy0ngAFXwAZrNlILMB8b&v=4
+
+----
+
+f -> from 1 to 499 ?
+
+g -> from 500 to ...
+
+----
+
+g|1|r|s|0
+
+f|1|r|s|0|configured|1|XplayerURL|http://gllive.gameloft.com/ope/GenericXPlayer_v1.php|type|0|XPPHPVerNo|4
+
+----
+
+0x00798030 -> if bypassed here with 1, started to make XplayerURL requests!
+
+----
+
+[GetWebConfig] before String2Blob -> buffer = f|1|i|25470|v|1.0.1j|
+
+SendByGet b=MXxm8LgFYudn3adF2XxmUaJlXOgFa
+
+--
+
+GLXPlayerUser::sendGetPromoRss before String2Blob -> buffer = f|204|i|25470|y|1|nid|0|l|en|u|ae87b081fddccaf8fc32180b52b639b10a662e26|
+
+POST b=MXNmWqdFPXNm1qZnWWxE8fdFULgz8bdFSXxzUXxD8fwz4CJyWGtmMrgzJnwyMHJzJnJmXGdmIvJmIzZm5iwmWeMn2itzYydFa&v=
+
+--
+
+GLXPlayerFileDownloadMgr::SendGetFileInfo before String2Blob -> buffer = f|123|i|25470|u|abc|p|patch_list.bin|
+
+SendByGet b=MXxmYmdFPXNm1qZnWWxD8fMyJXhC8bxy0ngAFXwAZrNlILMB8b
+
+--
+
+----
+
+0x0079369c -> function handler? from 53 (0x35) to 205 (0xcd)
+
+----
+
+hook for the MY_log
+
+Rich
+
+b *0x00796538
+command
+printf "%s, %d %.200s, %d %.200s, %d %.200s\n", $r0, $r1, ($r1 <= 4096) ? "" : $r1, $r2, ($r2 <= 4096) ? "" : $r2, $r3, ($r3 <= 4096) ? "" : $r3
+cont
+end
+cont
+
+Simple
+
+b *0x00796538
+command
+p (char *)$r0
+cont
+end
+cont
+
+----
+
+Hook to check for status?
+
+b *0x0020d1a0
+command
+p $r3
+cont
+end
+cont
+
+***
+
+dprintf *0x0020d1a0, "status %d\n", $r3
+
+----
+
+Status changes
+
+Real iOS
+
+0 -> 1 -> 8
+
+Status 0
+
+f|1|i|25470|v|1.0.1j|
+GET http://gllive.gameloft.com/ope/ServerConfig.php?b=MXxm8LgFYudn3adF2XxmUaJlXOgFa HTTP/1.1" 200 -
+
+=> response f|1|r|s|configured|1|XplayerURL|http://gllive.gameloft.com/ope/GenericXPlayer_v1.php|type|0|XPPHPVerNo|4
+
+Status 1
+
+f|123|i|25470|u|abc|p|patch_list.bin|
+GET http://gllive.gameloft.com/ope/GenericXPlayer_v1.php?b=MXxmYmdFPXNm1qZnWWxD8fMyJXhC8bxy0ngAFXwAZrNlILMB8b&v=4 HTTP/1.1" 200 -
+
+=> response 'f|53|r|e|102'
+
+Status 8
+
+****
+
+Login
+
+b *0x0024e580
+
+b *0x0024b9c8 <--
+
+0x0024b990 <- check for a sucessful login?
+
+---
+
+1
+
+b *0x002459d4
+b *0x002464f0
+b *0x00248e68
+b *0x00249174
+b *0x002492e8
+b *0x0024a54c <--
+
+0
+
+b *0x00245bc8
+b *0x00246780
+
+
+****
+
+Login success response
+
+f|15|r|s|u|abc|t|1|tk|t-o-k-e-n|tke|3600|un|1|n|1|
+
+u -> user id (login)
+t -> ?
+tk -> token
+tke -> token expiration (in seconds ?)
+un -> ?
+n -> ?
+
+gct -> ?
+sid -> ?
+
+*****
+
+Lobby
+
+touchHLE::libc::sys::socket: send buf [21, 7, 18, 15, 22, 23, 15, 5], Ok("\u{15}\u{7}\u{12}\u{f}\u{16}\u{17}\u{f}\u{5}")
+touchHLE::libc::sys::socket: send buf [0, 40, 0, 0, 18, 3, 0, 0, 0, 0, 0, 8, 3, 0, 6, 97, 98, 99, 0, 10, 3, 1, 6, 50, 53, 52, 55, 48, 0, 9, 1, 13, 6, 48, 46, 48, 48, 0, 5, 3, 14, 6], Ok("\0(\0\0\u{12}\u{3}\0\0\0\0\0\u{8}\u{3}\0\u{6}abc\0\n\u{3}\u{1}\u{6}25470\0\t\u{1}\r\u{6}0.00\0\u{5}\u{3}\u{e}\u{6}")
+LobbySession::OnRequestErrorEvent: type:2, err:0
+LobbySession::HandleError: opCode:4611, errorCode:30002, errorMsg:Request time out.
+LG::CGameSession::CallBackLobbyRoomList: errCode:30002, rooms.size:0
+CGameSession::WebLog: address:192.168.1.78, port:9999, logtype:WebLogType_Lobby, errCode:30002, serverType:1
+touchHLE::libc::stdlib: atoi: 'Ok("")' -> 0
+CGameSession::CallBackLobbyRoomList: errcode:30002
+touchHLE::libc::stdlib: atoi: 'Ok("")' -> 0
+
+(gdb) bt
+#0  0x0029e9d4 in ?? ()
+#1  0x0029eed8 in ?? ()
+#2  0x007e0d74 in XPlayerLib::EventDispatcher::Dispatch ()
+#3  0x007ab390 in XPlayerLib::CProtocol::GetUINT8 ()
+#4  0x007e0d74 in XPlayerLib::EventDispatcher::Dispatch ()
+#5  0x007e0148 in std::vector<unsigned char, std::allocator<unsigned char> >::resize ()
+#6  0x007a7c80 in XPlayerLib::CProtocol::GetUINT8 ()
+#7  0x0029e040 in ?? ()
+#8  0x002480ac in ?? ()
+#9  0x0004ac9c in ?? ()
+#10 0x00046940 in ?? ()
+#11 0x00024510 in ?? ()
+#12 0x000251b8 in ?? ()
+#13 0x0009df0c in ?? ()
+#14 0x340c598c in _pthread_start ()
+#15 0x340bb0ec in thread_start ()
+
+Lobby request message examples:
+
+Login request, opcode 0x1203
+
+[0, 40, 0, 0, 18, 3, 0, 0, 0, 0, 0, 8, 3, 0, 6, 97, 98, 99, 0, 10, 3, 1, 6, 50, 53, 52, 55, 48, 0, 9, 1, 13, 6, 48, 46, 48, 48, 0, 5, 3, 14, 6]
+
+b"\0(\0\0\u{12}\u{3}\0\0\0\0\0\u{8}\u{3}\0\u{6}abc\0\n\u{3}\u{1}\u{6}25470\0\t\u{1}\r\u{6}0.00\0\u{5}\u{3}\u{e}\u{6}"
+
+[
+0, 40, <- total msg size (without size itself)
+0, 0, 18, 3, <- opcode
+0, 0, 0, 0, <- padding?
+	0, 8, <- size of next chunk (with size itself)
+		3, 0, 6, <- chunk data type?
+		97, 98, 99, <- chunk data?
+	0, 10,
+		3, 1, 6,
+		50, 53, 52, 55, 48,
+	0, 9,
+		1, 13, 6,
+		48, 46, 48, 48,
+	0, 5,
+		3, 14, 6
+]
+
+b"\0\u{28}
+\0\0\u{12}\u{3} <- 0x1203
+\0\0\0\0
+	\0\u{8}
+		\u{3}\0\u{6} <- 0x300 6
+		abc <- userid
+	\0\n
+		\u{3}\u{1}\u{6} <- 0x301 6
+		25470 <- GGI (Gameloft Game Id?)
+	\0\t
+		\u{1}\r\u{6} <- 0x10d 6
+		0.00 <- version?
+	\0\u{5}
+		\u{3}\u{e}\u{6}" <- 0x30e 6
+
+---
+
+Get room list, opcode 0x120c
+
+[0, 38, 0, 0, 18, 12, 0, 0, 0, 0, 0, 12, 2, 19, 6, 84, 117, 110, 110, 101, 108, 32, 0, 9, 2, 17, 3, 0, 0, 0, 0, 0, 9, 2, 18, 3, 0, 0, 0, 30]
+
+b"\0&\0\0\u{12}\u{c}\0\0\0\0\0\u{c}\u{2}\u{13}\u{6}Tunnel \0\t\u{2}\u{11}\u{3}\0\0\0\0\0\t\u{2}\u{12}\u{3}\0\0\0\u{1e}"
+
+[
+0, 38, <- total msg size (without size itself)
+0, 0, 18, 12, <- opcode
+0, 0, 0, 0, <- padding
+	0, 12, <- size of next chunk (with size itself)
+		2, 19, 6, <- chunk data type?
+		84, 117, 110, 110, 101, 108, 32, <- chunk data?
+	0, 9,
+		2, 17, 3,
+		0, 0, 0, 0,
+	0, 9,
+		2, 18, 3,
+		0, 0, 0, 30
+]
+
+b"\0\u{26}
+\0\0\u{12}\u{c} <- 0x120c
+\0\0\0\0
+	\0\u{c}
+		\u{2}\u{13}\u{6} <- 0x213 6
+		Tunnel 
+	\0\t
+		\u{2}\u{11}\u{3} <- 0x211 3
+		\0\0\0\0
+	\0\t
+		\u{2}\u{12}\u{3} <- 0x212 3
+		\0\0\0\u{1e}" <- 30, size of buffer?
+
+---
+
+[0, 8, 0, 0, 18, 5, 0, 0, 0, 0]
+
+b"\0\u{8}\0\0\u{12}\u{5}\0\0\0\0" -> keep alive?, opcode 0x1205
+
+Lobby message data types
+
+6 -> string
+
+3 -> integer, 4 bytes
+
+*****
+
+Lobby response
+
+Opcode 0x2103
+
+handler 1 0x0029fbc8
+handler 2 0x007a6e18
+
+[
+0, 0, 33, 3, # opcode 0x2103
+0, 0, 0, 0, #padding?
+	0, 9, # size of next chunk (with size itself)
+		255, 0, 3, # 0xff00 3
+		0, 0, 0, 0, # (previous state? or protocol version?)
+	0, 9,
+		1, 13, 6, # 0x10d 6 (version)
+		48, 46, 48, 48, # "0.00"
+	0, 8,
+		1, 14, 6, # 0x10e 6 ??
+		66, 66, 49, # BB1
+]
+
+---
+
+Opcode 0x2112 (non 0x210c! see 0x007a7418)
+
+handler 1 0x0029fbb4
+handler 2 0x007a6e60
+
+[
+0, 0, 33, 18, # opcode 0x2112
+0, 0, 0, 0, # padding
+	0, 9, # size of next chunk (with size itself)
+		255, 0, 3, # 0xff00 3
+		0, 0, 0, 0, # 0 (protocol version?)
+	0, 12,
+		2, 19, 6, # 0x213 6, room name
+		84, 117, 110, 110, 101, 108, 32, # str "Tunnel "
+	0, 9,
+		2, 20, 3, # 0x214 3, room id
+		0, 0, 0, 0, # int 0
+]
+
+---
+
+Opcode 0x120a -> 0x210a
+
+handler for 0x120a -> 0x007a4010
+
+handler 1 0x002a00f0
+handler 2 0x007a6e50
+
+/*
+('192.168.1.78', 50464) Chunk: size 06, chunk_id 0x20b, data_type 1
+('192.168.1.78', 50464) Chunk value: byte 0, char ''
+('192.168.1.78', 50464) Chunk: size 06, chunk_id 0x20c, data_type 1
+('192.168.1.78', 50464) Chunk value: byte 0, char ''
+*/
+
+[
+0, 0, 33, 10, # opcode 0x210a
+0, 0, 0, 0, # padding
+	0, 9, # size of next chunk (with size itself)
+		255, 0, 3, # 0xff00 3
+		0, 0, 0, 0, # 0 (protocol version?)
+	0, 12,
+		2, 19, 6, # 0x213 6, room name
+		84, 117, 110, 110, 101, 108, 32, # str "Tunnel "
+	0, 6,
+		2, 11, 1, # 0x20b 1, ?
+		0, # byte 0
+	0, 6,
+		2, 12, 1, # 0x20c 1, ?
+		0, # byte 0
+]
+
+---
+
+Opcode 0x1206 -> 0x2106
+
+handler for 0x1206 -> 0x007a35e8
+
+handler 1 0x0029fbe8
+handler 2 0x007a6e30
+
+Opcode 0x1205 -> 0x2105 "Keep-alive"
+
+handler for 0x1205 -> 0x007a3228
+
+handler 1 0x0029fbe8
+handler 2 0x007a6e30
+
+*****
+
+Game server!
+
+touchHLE::libc::sys::socket: send buf [4, 0, 6, 0], Ok("\u{4}\0\u{6}\0")
+touchHLE::libc::sys::socket: send buf [58, 0, 17, 0, 3, 0, 97, 98, 99, 9, 0, 116, 45, 111, 45, 107, 45, 101, 45, 110, 65, 0, 0, 0, 14, 0, 116, 111, 117, 99, 104, 72, 76, 69, 100, 101, 118, 105, 99, 101, 3, 0, 97, 98, 99, 6, 0, 49, 46, 48, 46, 49, 106, 0, 1, 0, 0, 0], Ok(":\0\u{11}\0\u{3}\0abc\t\0t-o-k-e-nA\0\0\0\u{e}\0touchHLEdevice\u{3}\0abc\u{6}\01.0.1j\0\u{1}\0\0\0")
+
+[
+	4, 0, # msg size
+	6, 0 # msg id?
+]
+
+(gdb) bt
+#0  0x000215d8 in ?? ()
+#1  0x000200e0 in ?? ()
+#2  0x00107838 in ?? ()
+#3  0x0024c2c8 in ?? ()
+#4  0x000219a8 in ?? ()
+#5  0x00022530 in ?? ()
+#6  0x000201a4 in ?? ()
+#7  0x00020280 in ?? ()
+#8  0x002480bc in ?? ()
+#9  0x0004ac9c in ?? ()
+#10 0x00046940 in ?? ()
+#11 0x00024510 in ?? ()
+#12 0x000251b8 in ?? ()
+#13 0x0009df0c in ?? ()
+#14 0x340c598c in _pthread_start ()
+#15 0x340bb0ec in thread_start ()
+
+
+[
+	58, 0, # msg size
+	17, 0, # msg id?
+		3, 0, # chunk size 3
+		97, 98, 99, # 'abc'
+		9, 0, # chunk size 9
+		116, 45, 111, 45, 107, 45, 101, 45, 110, # 't-o-k-e-n'
+		65, 0, 0, 0, # ??
+		14, 0, # chunk size 14
+		116, 111, 117, 99, 104, 72, 76, 69, 100, 101, 118, 105, 99, 101, # 'touchHLEdevice'
+		3, 0, # chunk size 3
+		97, 98, 99, # 'abc'
+		6, 0, # chunk size 6
+		49, 46, 48, 46, 49, 106, # '1.0.1j'
+		0, 1, 0, 0, 0 # ??
+]
+
+(gdb) bt
+#0  0x000215d8 in ?? ()
+#1  0x000200e0 in ?? ()
+#2  0x00107c64 in ?? ()
+#3  0x0024c2c8 in ?? ()
+#4  0x000219a8 in ?? ()
+#5  0x00022530 in ?? ()
+#6  0x000201a4 in ?? ()
+#7  0x00020280 in ?? ()
+#8  0x002480bc in ?? ()
+#9  0x0004ac9c in ?? ()
+#10 0x00046940 in ?? ()
+#11 0x00024510 in ?? ()
+#12 0x000251b8 in ?? ()
+#13 0x0009df0c in ?? ()
+#14 0x340c598c in _pthread_start ()
+#15 0x340bb0ec in thread_start ()
+
+touchHLE::libc::sys::socket: send buf [17, 0, 33, 0, 3, 0, 115, 100, 102, 1, 0, 0, 0, 1, 1, 1, 1], Ok("\u{11}\0!\0\u{3}\0sdf\u{1}\0\0\0\u{1}\u{1}\u{1}\u{1}")
+
+[
+	17, 0, # msg size
+	33, 0, # opcode 0x21
+		3, 0, # chunk size 3
+		115, 100, 102, 'sdf' -> character name
+		1, # race type, human
+		0, # male / female, male
+		0,
+		0,
+		1,
+		1,
+		1,
+		1
+]
+
+touchHLE::libc::sys::socket: send buf [18, 0, 33, 0, 4, 0, 115, 100, 100, 102, 1, 1, 0, 0, 1, 1, 1, 1], Ok("\u{12}\0!\0\u{4}\0sddf\u{1}\u{1}\0\0\u{1}\u{1}\u{1}\u{1}")
+
+---
+
+Game server opcodes
+
+0x21e04 handle 0x4 opcode? -> 4 last bytes is server time? expected response to 0x3 from client, also with monotonic time? keep-alive?
+
+0x00021dd0 handle 0x15c opcode?
+
+---
+
+CaO R:E
+
+Chaos & Order Reverse Engineered
+
+---
+
+PLAY
+
+Breakpoint 1, 0x0010618c in ?? ()
+(gdb) bt
+#0  0x0010618c in ?? ()
+#1  0x00245a24 in ?? ()
+#2  0x00020224 in ?? ()
+#3  0x00020280 in ?? ()
+#4  0x002480bc in ?? ()
+#5  0x0004ac9c in ?? ()
+#6  0x00046940 in ?? ()
+#7  0x00024510 in ?? ()
+#8  0x000251b8 in ?? ()
+#9  0x0009df0c in ?? ()
+#10 0x340c598c in _pthread_start ()
+#11 0x340bb0ec in thread_start ()
+
+---
+
+After PLAY?
+
+(gdb) bt
+#0  0x0001e580 in ?? ()
+#1  0x00245a24 in ?? ()
+#2  0x00020224 in ?? ()
+#3  0x00020280 in ?? ()
+#4  0x002480bc in ?? ()
+#5  0x0004ac9c in ?? ()
+#6  0x00046940 in ?? ()
+#7  0x00024510 in ?? ()
+#8  0x000251b8 in ?? ()
+#9  0x0009df0c in ?? ()
+#10 0x340c598c in _pthread_start ()
+#11 0x340bb0ec in thread_start ()
+
+---
+
+GS_GamePlay::InitState()
+
+(gdb) bt
+#0  0x0004fb1c in ?? ()
+#1  0x00045870 in ?? ()
+#2  0x00106410 in ?? ()
+#3  0x00245a24 in ?? ()
+#4  0x00020224 in ?? ()
+#5  0x00020280 in ?? ()
+#6  0x002480bc in ?? ()
+#7  0x0004ac9c in ?? ()
+#8  0x00046940 in ?? ()
+#9  0x00024510 in ?? ()
+#10 0x000251b8 in ?? ()
+#11 0x0009df0c in ?? ()
+#12 0x340c598c in _pthread_start ()
+#13 0x340bb0ec in thread_start ()

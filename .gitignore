@@ -1,0 +1,16 @@
+# IDEs
+.idea/
+.vscode/
+
+# Flask/Python
+__pycache__/
+dist/
+
+# Envs
+.env
+.venv
+env/
+venv/
+
+# C
+*.out
